@@ -10,6 +10,7 @@ import java.util.List;
 
 public class UserDaoHibernateImpl implements UserDao {
     private Session session;
+    private Transaction transaction = null;
 
     public UserDaoHibernateImpl() {
 
@@ -27,62 +28,107 @@ public class UserDaoHibernateImpl implements UserDao {
                 "    ENGINE = InnoDB\n" +
                 "    DEFAULT CHARACTER SET = utf8;";
 
-        session = Util.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+        try {
+            session = Util.getSessionFactory().openSession();
+            Transaction transaction = session.beginTransaction();
 
-        session.createSQLQuery(sqlCreateTable).executeUpdate();
+            session.createSQLQuery(sqlCreateTable).executeUpdate();
+            transaction.commit();
 
-        transaction.commit();
-        session.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void dropUsersTable() {
         String sqlDropTable = "DROP TABLE IF EXISTS`myfirstdb`.`users`;";
 
-        session = Util.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+        try {
+            session = Util.getSessionFactory().openSession();
+            transaction = session.beginTransaction();
 
-        session.createSQLQuery(sqlDropTable).executeUpdate();
+            session.createSQLQuery(sqlDropTable).executeUpdate();
+            transaction.commit();
 
-        transaction.commit();
-        session.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        } finally {
+            session.close();
+        }
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
         User user = new User(name, lastName, age);
-        session = Util.getSessionFactory().openSession();
-       Transaction transaction = session.beginTransaction();
 
-       session.save(user);
+        try {
+            session = Util.getSessionFactory().openSession();
+            Transaction transaction = session.beginTransaction();
 
-       transaction.commit();
-       session.close();
+            session.save(user);
+            transaction.commit();
 
-        System.out.println("User с именем – " + name + " добавлен в базу данных");
+            System.out.println("User с именем – " + name + " добавлен в базу данных");
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+
+
     }
 
     @Override
     public void removeUserById(long id) {
-        session = Util.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+        try {
+            session = Util.getSessionFactory().openSession();
+            Transaction transaction = session.beginTransaction();
 
-        session.delete(session.load(User.class, id));
-        transaction.commit();
-        session.close();
+            session.delete(session.load(User.class, id));
+            transaction.commit();
+
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
     }
 
     @Override
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        session = Util.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+        try {
+            session = Util.getSessionFactory().openSession();
+            Transaction transaction = session.beginTransaction();
 
-        users = session.createCriteria(User.class).list();
+            users = session.createCriteria(User.class).list();
+            transaction.commit();
 
-        transaction.commit();
-        session.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
 
         return users;
     }
@@ -91,12 +137,21 @@ public class UserDaoHibernateImpl implements UserDao {
     public void cleanUsersTable() {
         String sql = "TRUNCATE `myfirstdb`.`users`;";
 
-        session = Util.getSessionFactory().openSession();
-        Transaction transaction = session.beginTransaction();
+        try {
+            session = Util.getSessionFactory().openSession();
+            Transaction transaction = session.beginTransaction();
 
-        session.createSQLQuery(sql).executeUpdate();
+            session.createSQLQuery(sql).executeUpdate();
+            transaction.commit();
 
-        transaction.commit();
-        session.close();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
     }
 }
